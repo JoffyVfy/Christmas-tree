@@ -20,6 +20,9 @@ const App: React.FC = () => {
     showDecorations: true // 是否显示装饰
   });
 
+  // 音频播放状态（用于 UI 控制）
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
   // 自动播放音乐的逻辑
   useEffect(() => {
     let audioStarted = false;
@@ -30,6 +33,7 @@ const App: React.FC = () => {
       try {
         await audioService.start(); // 启动音乐
         audioStarted = true;
+        setIsPlaying(true);
         // 移除所有事件监听（只需启动一次）
         ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => 
            window.removeEventListener(evt, tryStartAudio)
@@ -53,8 +57,24 @@ const App: React.FC = () => {
         window.removeEventListener(evt, tryStartAudio)
       );
       audioService.stop();
+      setIsPlaying(false);
     };
   }, []);
+
+  // 切换音频播放（右下角按钮调用）
+  const toggleAudio = async () => {
+    if (isPlaying) {
+      audioService.stop();
+      setIsPlaying(false);
+    } else {
+      try {
+        await audioService.start();
+        setIsPlaying(true);
+      } catch (e) {
+        // 启动失败（通常因为未交互），不改变状态
+      }
+    }
+  };
 
   return (
     // 页面主容器，设置背景、字体、居中等样式
@@ -71,6 +91,18 @@ const App: React.FC = () => {
         {/* 3D 像素圣诞树球体区域 */}
         <div className="relative group w-full flex justify-center items-center z-20">
            <PixelTree config={config} />
+        </div>
+        {/* 右下角像素播放按钮 */}
+        <div className="fixed right-4 bottom-4 z-40">
+          <button
+            onClick={toggleAudio}
+            aria-pressed={isPlaying}
+            aria-label={isPlaying ? '停止音乐' : '播放音乐'}
+            className={`w-12 h-12 flex items-center justify-center font-mono text-sm ${isPlaying ? 'bg-red-500 text-white' : 'bg-green-400 text-slate-900'} pixel-art drop-shadow-[0_6px_18px_rgba(0,0,0,0.6)] border-2 border-black`}
+            style={{ fontFamily: "'Press Start 2P', monospace" }}
+          >
+            <span style={{ fontSize: 18, lineHeight: 1 }}>{isPlaying ? '■' : '▶'}</span>
+          </button>
         </div>
       </div>
     </div>
