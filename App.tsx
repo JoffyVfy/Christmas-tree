@@ -23,39 +23,11 @@ const App: React.FC = () => {
   // 音频播放状态（用于 UI 控制）
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-  // 自动播放音乐的逻辑
+  // 自动播放音乐的逻辑（已移除全局监听器）
   useEffect(() => {
-    let audioStarted = false;
-
-    // 尝试启动音频（需要用户交互）
-    const tryStartAudio = async () => {
-      if (audioStarted) return;
-      try {
-        await audioService.start(); // 启动音乐
-        audioStarted = true;
-        setIsPlaying(true);
-        // 移除所有事件监听（只需启动一次）
-        ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => 
-           window.removeEventListener(evt, tryStartAudio)
-        );
-      } catch (e) {
-        // 如果没有用户交互会报错，忽略即可
-      }
-    };
-
-    // 首次尝试启动
-    tryStartAudio();
-
-    // 监听常见用户交互事件，解锁音频上下文
-    ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => 
-      window.addEventListener(evt, tryStartAudio)
-    );
-
-    // 组件卸载时清理事件和停止音乐
+    // 不再尝试在任意页面交互时自动解锁音频。
+    // 由右下角按钮 toggleAudio 负责启动/停止音频。
     return () => {
-      ['click', 'keydown', 'touchstart', 'mousedown'].forEach(evt => 
-        window.removeEventListener(evt, tryStartAudio)
-      );
       audioService.stop();
       setIsPlaying(false);
     };
