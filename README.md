@@ -1,112 +1,108 @@
- # Christmas-tree
-一个像素旋转的圣诞树
+ # 🎄 Pixel Christmas Tree
 
-这是一个用 React + TypeScript + Vite 实现的像素风格 3D 圣诞树演示。项目通过 Canvas 渲染体素（voxel）场景，包含可旋转的圣诞树、礼物和合成器产生的 8-bit 音频效果。仓库已被简化为最小可运行集，去除了会在前端暴露敏感 API key 的代码。
+> 一个像素风格的 3D 旋转圣诞树，使用 React + TypeScript + Vite 构建。
 
-## 主要特性
-- 像素风格的 3D 圣诞树（Canvas 渲染）
-- 内置 8-bit 合成器播放简短旋律（Web Audio API）
-- 使用 Vite 开发服务器，支持局域网访问（`host: 0.0.0.0`）
+通过 Canvas 渲染体素（Voxel）场景，包含可旋转的圣诞树、礼物盒、糖果杖、雪花粒子，以及 Web Audio API 合成的 8-bit 风格圣诞旋律。
 
-## 快速开始（本地开发）
+## ✨ 功能特性
 
-前提：已安装 Node.js（推荐 LTS 版本）和 npm
+- 🌲 **3D 体素圣诞树** — Canvas 渲染的多层树冠、树干，自动旋转动画
+- ⭐ **3D 树顶星** — 位于圣诞树顶部的像素风星形装饰
+- 🎁 **礼物盒 & 糖果** — 带丝带和蝴蝶结的多种礼物、糖果杖、棒棒糖
+- ❄️ **雪花粒子系统** — 150 片雪花在玻璃球内缓缓飘落
+- 🔊 **8-bit 合成器音乐** — 使用 Web Audio API 播放《Jingle Bells》旋律
+- 🎮 **像素风 UI** — 复古像素字体 + 像素风格音频控制按钮
+- 📱 **响应式布局** — 自适应窗口大小，支持高 DPI 屏幕
+- 🌐 **局域网访问** — 开发服务器监听 `0.0.0.0`，可在手机/平板上预览
 
-1. 安装依赖：
+## 📂 项目结构
 
-```powershell
+```
+Christmas-tree/
+├── index.html                  # HTML 入口（Tailwind CDN + 像素字体）
+├── index.tsx                   # React 挂载入口
+├── App.tsx                     # 顶层组件（问候语、配置、音频控制）
+├── types.ts                    # TypeScript 类型定义
+├── components/
+│   ├── PixelTree.tsx           # 核心：体素场景生成 & 3D 渲染（含雪花粒子）
+│   └── PixelAudioButton.tsx    # 像素风音频播放/暂停按钮（备用组件）
+├── services/
+│   └── audioService.ts         # Web Audio 合成器（Jingle Bells）
+├── vite.config.ts              # Vite 配置（端口 3000）
+├── tsconfig.json               # TypeScript 配置
+└── package.json                # 项目依赖与脚本
+```
+
+## 🚀 快速开始
+
+> 前提：已安装 [Node.js](https://nodejs.org/)（推荐 LTS 版本）和 npm
+
+### 1. 安装依赖
+
+```bash
 npm install
 ```
 
-2. 启动开发服务器：
+### 2. 启动开发服务器
 
-```powershell
+```bash
 npm run dev
 ```
 
-3. 在浏览器打开：
+启动后在浏览器打开：
 
-- 本地: http://localhost:3000/
-- 局域网: 使用 Vite 启动时输出的 Network 地址（例如 `http://192.168.x.y:3000/`）
+| 访问方式 | 地址 |
+|---------|------|
+| 本地 | http://localhost:3000/ |
+| 局域网 | 终端输出的 Network 地址（如 `http://192.168.x.y:3000/`） |
 
-停止服务器：在终端按 `Ctrl + C`。
+> 💡 **提示：** 点击页面任意位置或右下角按钮即可解锁音频播放（浏览器限制自动播放）。按 `Ctrl + C` 停止服务器。
 
-## 项目结构（保留的最小文件）
+### 3. 构建生产版本
 
-- `index.html` — 页面模板与样式引入
-- `index.tsx` — React 挂载入口
-- `App.tsx` — 顶层组件（问候、配置、启动音频、渲染 PixelTree）
-- `components/PixelTree.tsx` — 主要渲染逻辑（体素生成、渲染与雪花粒子）
-- `services/audioService.ts` — Web Audio 合成器（播放音乐）
-- `types.ts` — TypeScript 类型定义
-- `vite.config.ts` — Vite 配置（端口、host、alias）
-- `package.json` / `tsconfig.json` / `.gitignore` 等配置文件
-
-> 注意：项目已移除或合并部分可选组件（如独立的 `Snow`、`StaticDecorations`）以保持仓库简洁，同时也移除了客户端直接调用外部 AI（Gemini）的实现以避免在前端暴露 API key。
-
-## 部署
-
-该项目可以构建为静态站点并部署到常见静态托管服务（Vercel、Netlify、GitHub Pages 等）。构建命令：
-
-```powershell
+```bash
 npm run build
 ```
 
-构建输出在 `dist/`（或由 Vite 配置指定），将其部署到你选择的静态托管平台即可。
+构建产物输出到 `dist/` 目录。
 
-## 数据流（详细）
+### 4. 预览生产构建
 
-下面按时间顺序描述从用户打开页面到渲染与音频输出的完整数据流，包括各模块的输入/输出和关键事件点：
+```bash
+npm run preview
+```
 
-1) 页面加载与 React 启动
-	- 浏览器请求 `index.html`，Vite 在开发模式下返回 HTML。`index.html` 引入 `index.tsx`（ES 模块）。
-	- `index.tsx` 创建 React 根并渲染 `<App />`。此时还没有启动动画或音频调度。
+在本地预览构建后的静态站点效果。
 
-2) App 初始化与配置传递
-	- `App.tsx` 读取初始配置（`TreeConfig`：rotationSpeed、pixelSize、showDecorations）。
-	- `App` 将 `config` 通过 props 传给 `<PixelTree config={config} />`。
-	- 同时 `App` 绑定若干用户交互事件（click、keydown、touchstart、mousedown），以便浏览器允许解锁音频上下文（多数浏览器在用户交互之前禁止自动播放）。
+## 🎮 操作说明
 
-3) PixelTree 场景生成（同步）
-	- 在组件挂载或 `config` 更改时，`PixelTree` 的 `useMemo` 负责生成体素（voxels）列表：
-	  - 树（多层叶片、树干）、顶部星、底座（wood / gold）、若干礼物、糖果等。每个体素包含位置和颜色信息（`Voxel`）。
-	  - 同时初始化雪花粒子（SnowFlake）数组，点位在球形区域内（使用拒绝采样保证球内均匀分布）。
-	- 生成是内存数据结构的构建，完成后不会频繁重新创建（除非 `config` 或装饰显示状态改变）。
+- **右下角像素按钮** — 点击播放 / 暂停 8-bit 圣诞音乐
+- **自动旋转** — 圣诞树持续缓慢旋转，无需操作
+- **窗口缩放** — 画面自动适配窗口大小
 
-4) 渲染循环（每帧）
-	- `PixelTree` 使用 `requestAnimationFrame` 启动渲染循环：
-	  - 计算当前旋转角（由 `config.rotationSpeed` 驱动，且在每帧通过 setState 更新或闭包累加）。
-	  - 对每个体素做 3D 旋转变换（如果体素非 static），进行相机投影（透视缩放）得到屏幕坐标与深度值。
-	  - 将雪花粒子按物理规则更新位置（y 方向下降、围绕中心轻微摆动），并检测超出球体范围时重置到顶部区域。
-	  - 把所有可见元素（体素 + 雪粒）收集到 `projected` 数组，按深度（r z 或投影深度）排序（Painter's algorithm），从远到近逐个绘制像素方块到 Canvas。
-	  - 在绘制完成后（或在同一循环末尾）绘制玻璃球的高光 / 边缘等覆盖层。
+## 🛠️ 技术栈
 
-5) 音频启动与调度
-	- `audioService` 是一个在 `services/audioService.ts` 中实现的本地合成器：
-	  - `App` 在挂载时尝试调用 `audioService.start()`，若浏览器要求用户交互则由事件监听触发实际启动。
-	  - 启动后 `audioService` 创建或恢复 `AudioContext`，初始化调度器变量（currentNoteIndex、nextNoteTime 等），并进入定时调度循环（基于 `lookahead` 与 `scheduleAheadTime`）。
-	  - 调度器会在合适的未来时间点用 Oscillator + Gain 创建音符（方波/三角波）并设置包络，随后 `osc.start()`/`osc.stop()`，实现 8-bit 风格音色。
+| 技术 | 用途 |
+|------|------|
+| React 19 | UI 框架 |
+| TypeScript 5.8 | 类型安全 |
+| Vite 6.2 | 构建工具 & 开发服务器 |
+| Canvas API | 3D 体素渲染引擎 |
+| Web Audio API | 8-bit 音频合成 |
+| Tailwind CSS | 样式（CDN 引入） |
 
-6) 交互与状态变化
-	- 用户可以通过 UI 修改 `config`（例如放大像素、切换装饰），`PixelTree` 会响应 props 变化：重新计算投影比例或在需要时重新生成部分体素。
-	- 当页面失去焦点或组件卸载时，`audioService.stop()` 被调用以清理调度器和计时器；渲染循环被 `cancelAnimationFrame` 停止。
+## 📦 部署
 
-7) 错误处理与边界情况
-	- 音频无法启动：多数情况下是因为未发生用户交互。`App` 已添加事件监听以在用户第一次交互时调用 `audioService.start()`。
-	- 性能问题：体素数量过多会增加每帧的计算与绘制开销。应避免在渲染循环中频繁分配大数组，使用 `useMemo`、尽量绘制外壳而非实心体积以减少绘制次数。
-	- 窗口大小变化：Canvas 尺寸在 `resize` 事件中同步更新，渲染会基于新的宽高重新计算中心点与缩放比。
+构建后可部署到任意静态托管平台：
 
-8) 输入 / 输出清单（便于理解模块契约）
-	- 输入：
-	  - 用户浏览器（事件、交互）
-	  - `TreeConfig`（来自 `App`）
-	  - 窗口尺寸与设备像素比
-	- 输出：
-	  - Canvas 像素帧（视觉）
-	  - 浏览器音频输出（8-bit 合成器）
+- [Vercel](https://vercel.com/)
+- [Netlify](https://www.netlify.com/)
+- [GitHub Pages](https://pages.github.com/)
 
-## 贡献与许可
+只需将 `dist/` 目录的内容上传到对应平台即可。
 
-欢迎提交 issue 或 pull request。该仓库的代码遵循 MIT 许可（如需更改许可请与仓库所有者确认）。
+## 📄 许可
+
+MIT License
 
 

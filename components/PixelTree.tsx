@@ -19,7 +19,8 @@ interface SnowFlake {
 
 const PixelTree: React.FC<Props> = ({ config }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [rotation, setRotation] = useState(0);
+  const rotationRef = useRef(0); // 使用 ref 避免触发重渲染
+  const [rotation, setRotation] = useState(0); // 保留 state 用于初始渲染
 
   // Constants defining the Globe Geometry
   // SCENE_BASE_Y is where the tree sits (-15).
@@ -63,6 +64,14 @@ const PixelTree: React.FC<Props> = ({ config }) => {
   const voxels = useMemo(() => {
     const v: SceneVoxel[] = [];
     const add = (x: number, y: number, z: number, color: string, isStatic: boolean = false) => v.push({x, y, z, color, isStatic});
+
+    // Seeded random number generator (基于坐标的确定性随机数)
+    const seededRandom = (x: number, y: number, z: number, salt: number = 0) => {
+      let seed = x * 374761393 + y * 668265263 + z * 1274126177 + salt;
+      seed = (seed ^ (seed >> 13)) * 1274126177;
+      seed = seed ^ (seed >> 16);
+      return (seed & 0x7fffffff) / 0x7fffffff;
+    };
 
     // ==========================================
     // 1. HELPERS: Decoration Generators
@@ -272,18 +281,18 @@ const PixelTree: React.FC<Props> = ({ config }) => {
 
               // --- Enhanced Decorations: Stars, Lights, Confetti ---
               else if (config.showDecorations && dist > currentR * 0.6) {
-                 const p = Math.random();
+                 const p = seededRandom(x, y, z);
                  if (p > 0.85) {
-                    const type = Math.random();
+                    const type = seededRandom(x, y, z, 1);
                     if (type > 0.65) {
                         const orbs = ['#ea580c', '#2563eb', '#db2777', '#ca8a04']; 
-                        color = orbs[Math.floor(Math.random() * orbs.length)];
+                        color = orbs[Math.floor(seededRandom(x, y, z, 2) * orbs.length)];
                     } else if (type > 0.35) {
                         const lights = ['#22d3ee', '#a3e635', '#fef08a', '#f472b6'];
-                        color = lights[Math.floor(Math.random() * lights.length)];
+                        color = lights[Math.floor(seededRandom(x, y, z, 2) * lights.length)];
                     } else {
                         const confetti = ['#ffffff', '#e2e8f0'];
-                        color = confetti[Math.floor(Math.random() * confetti.length)];
+                        color = confetti[Math.floor(seededRandom(x, y, z, 2) * confetti.length)];
                     }
                  }
               }
@@ -308,30 +317,44 @@ const PixelTree: React.FC<Props> = ({ config }) => {
     add(0, topTreeY+1, -1, starColor); add(0, topTreeY+1, 1, starColor);
 
 
-    // --- C. Gifts and Candy ---
-    // Left side
-    createGift(-18, SCENE_BASE_Y, 8, 10, 8, 10, 
+    // --- C. Gifts and Candy (均匀交错分布在树周围) ---
+    const baseY = SCENE_BASE_Y;
+
+    // 🎁 正前方 - 蓝色条纹礼物
+    createGift(-5, baseY, 22, 10, 8, 10, 
         { main: '#1e3a8a', sec: '#60a5fa', ribbon: '#facc15' }, 
         { pattern: 'vertical-stripes', hasLid: true }
     );
-    createGift(-25, SCENE_BASE_Y, -6, 8, 12, 8, 
-        { main: '#991b1b', sec: '#ef4444', ribbon: '#22c55e' }, 
-        { pattern: 'checkered', hasLid: false }
-    );
-    createLollipop(-14, SCENE_BASE_Y, 16, 8, 4); 
-    createWrappedCandy(-15, SCENE_BASE_Y, 20, '#f97316'); 
-
-    // Right side
-    createGift(12, SCENE_BASE_Y, 8, 10, 7, 8, 
+    
+    // 🍭 右前方 - 棒棒糖
+    createLollipop(18, baseY, 16, 8, 4); 
+    
+    // 🎁 右侧 - 绿色礼物
+    createGift(22, baseY, 0, 10, 7, 8, 
         { main: '#166534', ribbon: '#dc2626' }, 
         { pattern: 'solid', hasLid: true }
     );
-    createGift(25, SCENE_BASE_Y, -6, 7, 7, 7, 
+    
+    // 🍬 右后方 - 紫色包装糖果
+    createWrappedCandy(18, baseY, -18, '#8b5cf6'); 
+    
+    // 🎁 正后方 - 红色格子礼物
+    createGift(-6, baseY, -28, 8, 12, 8, 
+        { main: '#991b1b', sec: '#ef4444', ribbon: '#22c55e' }, 
+        { pattern: 'checkered', hasLid: false }
+    );
+    
+    // 🍭 左后方 - 糖果杖
+    createCandyCane(-18, baseY, -14, 12, false); 
+    
+    // 🎁 左侧 - 黄色条纹礼物
+    createGift(-28, baseY, 0, 7, 7, 7, 
         { main: '#facc15', sec: '#fef08a', ribbon: '#ef4444' }, 
         { pattern: 'vertical-stripes', hasLid: true }
     );
-    createCandyCane(14, SCENE_BASE_Y, 14, 12, true); 
-    createWrappedCandy(16, SCENE_BASE_Y, 20, '#8b5cf6'); 
+    
+    // 🍬 左前方 - 橙色包装糖果
+    createWrappedCandy(-20, baseY, 18, '#f97316'); 
 
     return v;
   }, [config.showDecorations]);
@@ -358,8 +381,8 @@ const PixelTree: React.FC<Props> = ({ config }) => {
       
       ctx.clearRect(0, 0, w, h);
 
-      const cos = Math.cos(rotation);
-      const sin = Math.sin(rotation);
+      const cos = Math.cos(rotationRef.current);
+      const sin = Math.sin(rotationRef.current);
 
       // Prepare list of things to draw (Voxels + Snow)
       const projected: any[] = [];
@@ -516,14 +539,14 @@ const PixelTree: React.FC<Props> = ({ config }) => {
           }
       }
 
-      setRotation(prev => prev + config.rotationSpeed);
+      rotationRef.current += config.rotationSpeed;
       animId = requestAnimationFrame(render);
     };
 
     render();
 
     return () => cancelAnimationFrame(animId);
-  }, [voxels, rotation, config]);
+  }, [voxels, config]);
 
   return (
     <div className="relative w-full flex items-center justify-center">
